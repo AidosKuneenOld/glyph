@@ -85,6 +85,11 @@ BenchmarkVeri-2        	   10000	    237446 ns/op
 This software includes a rewrite (from C++ to go)  of https://github.com/quantumsafelattices/glyph,
 which is covered by "Unlicense".
 
+This software includes codes from
+https://github.com/Yawning/newhope)
+which is covered by "CC0 1.0 Universal".
+
+
 ```
 Golang Standard Library                       BSD 3-clause License
 ```
