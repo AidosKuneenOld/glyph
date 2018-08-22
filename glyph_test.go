@@ -118,7 +118,6 @@ func TestGlyph1(t *testing.T) {
 	if err := pk.Verify(sig, message); err != nil {
 		t.Error(err)
 	}
-	t.Fatal()
 }
 
 func BenchmarkNtt(b *testing.B) {

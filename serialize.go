@@ -122,7 +122,7 @@ func newSparsePoly(r *big.Int) (*sparsePolyST, error) {
 		v.And(r, maskN)
 		s[i].pos = uint16(v.Uint64())
 		r.Rsh(r, nBits)
-		if r.Bit(i) == 1 {
+		if r.Bit(0) == 1 {
 			s[i].sign = true
 		}
 		r.Rsh(r, 1)

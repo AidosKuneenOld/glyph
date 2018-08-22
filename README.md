@@ -1,6 +1,7 @@
 [![Build Status](https://travis-ci.org/AidosKuneen/glyph.svg?branch=master)](https://travis-ci.org/AidosKuneen/glyph)
 [![GoDoc](https://godoc.org/github.com/AidosKuneen/glyph?status.svg)](https://godoc.org/github.com/AidosKuneen/glyph)
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/AidosKuneen/glyph/master/LICENSE)
+[![Coverage Status](https://coveralls.io/repos/github/AidosKuneen/glyph/badge.svg?branch=master)](https://coveralls.io/github/AidosKuneen/glyph?branch=master)
 
 GLYPH 
 =====
@@ -13,24 +14,21 @@ a signature scheme based on Ring-LWE.
 This software is mostly a rewrite of a [GLYPH implementation](https://github.com/quantumsafelattices/glyph) in Golang except that:
 
 
-* The implementation uses q=12289 and B=4095 instead of q=59393
-and B=16383 in the papaer for smaller sizes.
-Also these pramemetrs should make the crypto more secure.
-
+* The implementation uses different q and B from the papaer for smaller sizes.
+(Note that these pramemetrs should also make the crypto more secure)
 
 | | This implementation | In the Paper |
 | - | - | -|
 | Q | 12289 | 59393 |
 |B  | 4095 | 16383 | 
-| Bytes of Public key | 1792 bytes | 2048 bytes |
-| Bytes of Signagure | 1942 bytes | 2198 bytes |
+| Bytes of a Public key | 1792 bytes | 2048 bytes |
+| Bytes of a Signature | 1942 bytes | 2198 bytes |
 | Total | 3734 bytes | 4246 bytes |
 
 The drawback is that we need some time to sign a message (at most a few seconds).
 
 * The implementation uses the NTT algorithm applied in 
-[NewHope implementation](https://github.com/Yawning/newhope) for FFT
-for being faster.
+[NewHope implementation](https://github.com/Yawning/newhope) for faster FFT.
 
 
 
@@ -86,10 +84,11 @@ This software includes a rewrite (from C++ to go)  of https://github.com/quantum
 which is covered by "Unlicense".
 
 This software includes codes from
-https://github.com/Yawning/newhope)
-which is covered by "CC0 1.0 Universal".
+https://github.com/Yawning/newhope,
+which is covered by "CC0 1.0 Universal" license.
 
 
 ```
+github.com/AidosKuneen/numcpu  MIT License
 Golang Standard Library                       BSD 3-clause License
 ```
