@@ -101,38 +101,3 @@ func fftBackward(x *[constN]ringelt) {
 		x[i] = mulMOD(x[i], revN)
 	}
 }
-
-func pointwiseMul(b, e0 [constN]ringelt) [constN]ringelt {
-	var v [constN]ringelt
-	for i := 0; i < constN; i++ {
-		v[i] = mulMOD(e0[i], b[i])
-	}
-	return v
-}
-
-func pointwiseAdd(b, e0 [constN]ringelt) [constN]ringelt {
-	var v [constN]ringelt
-	for i := 0; i < constN; i++ {
-		v[i] = addMOD(e0[i], b[i])
-	}
-	return v
-}
-
-func pointwiseSub(b, e0 [constN]ringelt) [constN]ringelt {
-	var v [constN]ringelt
-	for i := 0; i < constN; i++ {
-		v[i] = subMOD(b[i], e0[i])
-	}
-	return v
-}
-
-/* Pointwise multiplication and addition in the ring.
-   All done in the FFT / CRT domain. */
-func pointwiseMulAdd(b, e0, e1 [constN]ringelt) [constN]ringelt {
-	var v [constN]ringelt
-	for i := 0; i < constN; i++ {
-		v[i] = mulMOD(e0[i], b[i])
-		v[i] = addMOD(v[i], e1[i])
-	}
-	return v
-}

@@ -48,12 +48,12 @@ func sparseMul(a [constN]ringelt, b *sparsePolyST) [constN]ringelt {
 	var v [constN]ringelt
 
 	/*multiply in Z[x]*/
-	for i := 0; i < omega; i++ {
+	for _, vb := range b {
 		for j := uint16(0); j < constN; j++ {
-			if b[i].sign {
-				vaux[b[i].pos+j] = addMOD(vaux[b[i].pos+j], a[j])
+			if vb.sign {
+				vaux[vb.pos+j] = addMOD(vaux[vb.pos+j], a[j])
 			} else {
-				vaux[b[i].pos+j] = subMOD(vaux[b[i].pos+j], a[j])
+				vaux[vb.pos+j] = subMOD(vaux[vb.pos+j], a[j])
 			}
 		}
 	}

@@ -10,8 +10,28 @@ GLYPH
 This is an implementation of [GLYPH](https://eprint.iacr.org/2017/766.pdf), which is
 a signature scheme based on Ring-LWE. 
 
+This software is mostly a rewrite of a [GLYPH implementation](https://github.com/quantumsafelattices/glyph) in Golang except that:
 
-This software is a rewrite of a [GLYPH implementation](https://github.com/quantumsafelattices/glyph) in Golang.
+
+* The implementation uses q=12289 and B=4095 instead of q=59393
+and B=16383 in the papaer for smaller sizes.
+Also these pramemetrs should make the crypto more secure.
+
+
+| | This implementation | In the Paper |
+| - | - | -|
+| Q | 12289 | 59393 |
+|B  | 4095 | 16383 | 
+| Bytes of Public key | 1792 bytes | 2048 bytes |
+| Bytes of Signagure | 1942 bytes | 2198 bytes |
+| Total | 3734 bytes | 4246 bytes |
+
+The drawback is that we need some time to sign a message (at most a few seconds).
+
+* The implementation uses the NTT algorithm applied in 
+[NewHope implementation](https://github.com/Yawning/newhope) for FFT
+for being faster.
+
 
 
 ## Requirements
@@ -50,13 +70,13 @@ Using the following test environment...
 ```
 
 
-For signing, it takes about 5.4 mS.
-For verification, it takes about 560 uS.
+For signing, it takes about 400 mS.
+
+For verification, it takes about 240 uS.
 
 ```
-BenchmarkSign-2              300           5439532 ns/op          251241 B/op      17532 allocs/op
-BenchmarkVeri-2             2000            559481 ns/op            3605 B/op         15 allocs/op
-
+BenchmarkSign-2        	      10	 401147645 ns/op
+BenchmarkVeri-2        	   10000	    237446 ns/op
 ```
 
 

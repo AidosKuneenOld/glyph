@@ -87,16 +87,22 @@ func TestGlyph1(t *testing.T) {
 		t.Error(err)
 	}
 	pk := sk.PK()
-	pk2 := pk.t
+	pkt1 := pk.t
 	var zero [1024]ringelt
-	fftForward(&pk.t)
-	fftBackward(&pk.t)
-	if pk2 != pk.t {
-		t.Fatal("invalid fft")
-	}
+	ntt(&pk.t)
 	if pk.t == zero {
 		t.Fatal("pk is all zero")
 	}
+	invNtt(&pk.t)
+	if pk.t == zero {
+		t.Fatal("pk is all zero")
+	}
+	if pk.t != pkt1 {
+		t.Log(pk.t)
+		t.Log(pkt1)
+		t.Fatal("invalid ntt")
+	}
+
 	t.Log("signing key:")
 	t.Log(sk)
 	t.Log("public key:")
@@ -112,9 +118,34 @@ func TestGlyph1(t *testing.T) {
 	if err := pk.Verify(sig, message); err != nil {
 		t.Error(err)
 	}
-	t.Fatal(9)
+	t.Fatal()
 }
 
+func BenchmarkNtt(b *testing.B) {
+	sk, err := NewSK()
+	if err != nil {
+		b.Error(err)
+	}
+	pk := sk.PK()
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		ntt(&pk.t)
+	}
+}
+
+// func BenchmarkFft(b *testing.B) {
+// 	sk, err := NewSK()
+// 	if err != nil {
+// 		b.Error(err)
+// 	}
+// 	pk := sk.PK()
+
+// 	b.ResetTimer()
+// 	for i := 0; i < b.N; i++ {
+// 		fftForward(&pk.t)
+// 	}
+// }
 func BenchmarkSign(b *testing.B) {
 	message := make([]byte, 32)
 
@@ -127,6 +158,86 @@ func BenchmarkSign(b *testing.B) {
 		sk.Sign(message)
 	}
 }
+
+func BenchmarkSparse(b *testing.B) {
+	message := make([]byte, 32)
+
+	sk, err := NewSK()
+	if err != nil {
+		b.Error(err)
+	}
+	sig, err := sk.Sign(message)
+	if err != nil {
+		b.Error(err)
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		sparseMul(sk.s1, sig.c)
+	}
+}
+
+func BenchmarkNTTSparse(b *testing.B) {
+	message := make([]byte, 32)
+
+	sk, err := NewSK()
+	if err != nil {
+		b.Error(err)
+	}
+	sig, err := sk.Sign(message)
+	if err != nil {
+		b.Error(err)
+	}
+	b.ResetTimer()
+	var sm [constN]ringelt
+	for i := 0; i < b.N; i++ {
+		for i, v := range sig.c {
+			if v.sign {
+				sm[i] = 1
+			} else {
+				sm[i] = constQ - 1
+			}
+		}
+		ntt(&sm)
+		s1 := sk.s1
+		ntt(&s1)
+		sm = pointwiseMul(s1, sm)
+		invNtt(&sm)
+	}
+}
+
+func TestNTTSpace(t *testing.T) {
+	message := make([]byte, 32)
+
+	sk, err := NewSK()
+	if err != nil {
+		t.Error(err)
+	}
+	sig, err := sk.Sign(message)
+	if err != nil {
+		t.Error(err)
+	}
+	var sm [constN]ringelt
+	for _, v := range sig.c {
+		if v.sign {
+			sm[v.pos] = 1
+		} else {
+			sm[v.pos] = constQ - 1
+		}
+	}
+	ntt(&sm)
+	s1 := sk.s1
+	ntt(&s1)
+	sm = pointwiseMul(s1, sm)
+	invNtt(&sm)
+
+	sm2 := sparseMul(sk.s1, sig.c)
+	if sm != sm2 {
+		t.Log(sm)
+		t.Log(sm2)
+		t.Error("invalid sparsemul")
+	}
+}
+
 func BenchmarkVeri(b *testing.B) {
 	message := make([]byte, 32)
 

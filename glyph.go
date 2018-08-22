@@ -46,10 +46,10 @@ func (sk *SigningKey) PK() *Publickey {
 	pk := &Publickey{}
 	s1 := sk.s1
 	s2 := sk.s2
-	fftForward(&s1)
-	fftForward(&s2)
+	ntt(&s1)
+	ntt(&s2)
 	pk.t = pointwiseMulAdd(constA, s1, s2)
-	fftBackward(&pk.t)
+	invNtt(&pk.t)
 	return pk
 }
 
@@ -122,12 +122,12 @@ func (sk *SigningKey) deterministicSign(y1, y2 [constN]ringelt, message []byte) 
 	var signature Signature
 	y1fft := y1
 	y2fft := y2
-	fftForward(&y1fft)
-	fftForward(&y2fft)
+	ntt(&y1fft)
+	ntt(&y2fft)
 
 	/*ay1_y2 = a y1 + y2*/
 	ay1y2 := pointwiseMulAdd(constA, y1fft, y2fft)
-	fftBackward(&ay1y2)
+	invNtt(&ay1y2)
 
 	ay1y2rounded := ay1y2
 	kfloor(&ay1y2rounded)
@@ -158,7 +158,7 @@ func (sk *SigningKey) deterministicSign(y1, y2 [constN]ringelt, message []byte) 
 
 	/*rejection sampling on z_2*/
 	for i := 0; i < constN; i++ {
-		if abs(signature.z2[i]) > (constB - omega) {
+		if abs(signature.z2[i]) > constB-omega {
 			return nil, errors.New("rejected")
 		}
 	}
@@ -189,10 +189,10 @@ func (pk *Publickey) Verify(sig *Signature, message []byte) error {
 	}
 	z1 := sig.z1
 	z2 := sig.z2
-	fftForward(&z1)
-	fftForward(&z2)
+	ntt(&z1)
+	ntt(&z2)
 	h := pointwiseMulAdd(constA, z1, z2)
-	fftBackward(&h)
+	invNtt(&h)
 	tc := sparseMul(pk.t, sig.c)
 	h = pointwiseSub(h, tc)
 	kfloor(&h)
