@@ -22,6 +22,13 @@ package glyph
 
 type ringelt uint16
 
+//Global Constants
+const (
+	PKSize  = qBits * constN / 8
+	SKSize  = 2 * 2 * constN / 8
+	SigSize = ((bBits+1+2)*constN + 11*omega) / 8
+)
+
 const (
 	glpDigestLength = 32
 

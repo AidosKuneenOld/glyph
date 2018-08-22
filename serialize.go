@@ -39,7 +39,7 @@ func (p *Publickey) Bytes() []byte {
 
 //NewPublickey creates an Publickey from serialized bytes.
 func NewPublickey(b []byte) (*Publickey, error) {
-	if len(b) != qBits*constN/8 {
+	if len(b) != PKSize {
 		return nil, errors.New("invalid length of bytes")
 	}
 	var r big.Int
@@ -82,7 +82,7 @@ func (s *SigningKey) Bytes() []byte {
 
 //NewSigningKey creates an SiningKey from serialized bytes.
 func NewSigningKey(b []byte) (*SigningKey, error) {
-	if len(b) != 2*2*constN/8 {
+	if len(b) != SKSize {
 		return nil, errors.New("invalid length of bytes")
 	}
 	var r big.Int
@@ -177,7 +177,7 @@ func (s *Signature) Bytes() []byte {
 
 //NewSignature creates an sparsePolyST from serialized bytes.
 func NewSignature(b []byte) (*Signature, error) {
-	if len(b) != ((bBits+1+2)*constN+11*omega)/8 {
+	if len(b) != SigSize {
 		return nil, errors.New("invalid length of bytes")
 	}
 	var s Signature

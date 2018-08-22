@@ -78,7 +78,7 @@ func encodeSparse(hashOutput [glpDigestLength]byte) (*sparsePolyST, error) {
 	randBitsUsed := 0
 	for i := 0; i < omega; i++ {
 		for {
-			if randBitsUsed+nBits > 64 {
+			if randBitsUsed+nBits+1 > 64 {
 				rand64 = r.please2()
 				randBitsUsed = 0
 			}

@@ -28,7 +28,7 @@ This software is mostly a rewrite of a [GLYPH implementation](https://github.com
 The drawback is that we need some time to sign a message (at most a few seconds).
 
 * The implementation uses the NTT algorithm applied in 
-[NewHope implementation](https://github.com/Yawning/newhope) for faster FFT.
+[NewHope](https://github.com/Yawning/newhope) for faster FFT.
 
 
 
