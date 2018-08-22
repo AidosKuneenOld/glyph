@@ -88,10 +88,6 @@ func abs(x ringelt) ringelt {
 	return constQ - x
 }
 
-func neg(x ringelt) ringelt {
-	return constQ - x
-}
-
 func addMOD(a, b ringelt) ringelt {
 	x := uint32(a) + uint32(b)
 	if x >= constQ {
@@ -112,21 +108,13 @@ func mulMOD(a, b ringelt) ringelt {
 	return ringelt((uint32(a) * uint32(b)) % constQ)
 }
 
-func subMODn(a, b ringelt) ringelt {
-	x := uint32(a) + uint32(constN-b)
-	if x >= constN {
-		x -= constN
-	}
-	return ringelt(x)
-}
-
-func pointwiseMul(b, e0 [constN]ringelt) [constN]ringelt {
-	var v [constN]ringelt
-	for i := 0; i < constN; i++ {
-		v[i] = mulMOD(e0[i], b[i])
-	}
-	return v
-}
+// func subMODn(a, b ringelt) ringelt {
+// 	x := uint32(a) + uint32(constN-b)
+// 	if x >= constN {
+// 		x -= constN
+// 	}
+// 	return ringelt(x)
+// }
 
 func pointwiseAdd(b, e0 [constN]ringelt) [constN]ringelt {
 	var v [constN]ringelt

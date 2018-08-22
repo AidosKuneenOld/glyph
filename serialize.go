@@ -28,8 +28,9 @@ import (
 //Bytes serialize Publickey.
 func (p *Publickey) Bytes() []byte {
 	var r big.Int
-	for _, t := range p.t {
+	for i := range p.t {
 		r.Lsh(&r, qBits)
+		t := p.t[constN-1-i]
 		tt := big.NewInt(int64(t))
 		r.Or(&r, tt)
 	}
@@ -57,15 +58,26 @@ func NewPublickey(b []byte) (*Publickey, error) {
 
 //Bytes serialize SigningKey.
 func (s *SigningKey) Bytes() []byte {
-	r := make([]byte, 2*2*constN/8)
-	for i, t := range append(s.s1[:], s.s2[:]...) {
-		ui := uint(i)
+	var r big.Int
+	for i := range s.s2 {
+		r.Lsh(&r, 2)
+		t := s.s2[constN-1-i]
 		if t == constQ-1 {
 			t = 2
 		}
-		r[ui/4] |= byte(t << (ui % 4))
+		tt := big.NewInt(int64(t))
+		r.Or(&r, tt)
 	}
-	return r
+	for i := range s.s1 {
+		r.Lsh(&r, 2)
+		t := s.s1[constN-1-i]
+		if t == constQ-1 {
+			t = 2
+		}
+		tt := big.NewInt(int64(t))
+		r.Or(&r, tt)
+	}
+	return r.Bytes()
 }
 
 //NewSigningKey creates an SiningKey from serialized bytes.
@@ -73,22 +85,27 @@ func NewSigningKey(b []byte) (*SigningKey, error) {
 	if len(b) != 2*2*constN/8 {
 		return nil, errors.New("invalid length of bytes")
 	}
+	var r big.Int
+	r.SetBytes(b)
 	s := &SigningKey{}
+	mask2 := big.NewInt(int64(3))
 	for i := range s.s1 {
-		ui := uint(i)
-		d := (b[ui/4] >> (ui % 4)) & 0x3
-		s.s1[i] = ringelt(d)
+		var v big.Int
+		v.And(&r, mask2)
+		s.s1[i] = ringelt(v.Uint64())
 		if s.s1[i] == 2 {
 			s.s1[i] = constQ - 1
 		}
+		r.Rsh(&r, 2)
 	}
 	for i := range s.s2 {
-		ui := uint(i) + constN/4
-		d := (b[ui/4] >> (ui % 4)) & 0x3
-		s.s2[i] = ringelt(d)
+		var v big.Int
+		v.And(&r, mask2)
+		s.s2[i] = ringelt(v.Uint64())
 		if s.s2[i] == 2 {
 			s.s2[i] = constQ - 1
 		}
+		r.Rsh(&r, 2)
 	}
 	return s, nil
 }

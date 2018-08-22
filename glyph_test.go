@@ -24,56 +24,56 @@ import (
 	"testing"
 )
 
-type testvec struct {
-	pk      Publickey
-	sk      SigningKey
-	y1      [constN]ringelt
-	y2      [constN]ringelt
-	sig     Signature
-	message []byte
-}
+// type testvec struct {
+// 	pk      Publickey
+// 	sk      SigningKey
+// 	y1      [constN]ringelt
+// 	y2      [constN]ringelt
+// 	sig     Signature
+// 	message []byte
+// }
 
 const signTrials = 100
 
 //only for q=59393, b=16383
-func _TestGlyph2(t *testing.T) {
-	vec := testvecs[0]
-	/*check that public key is derived from signing key*/
-	pktest := vec.sk.PK()
-	for i := 0; i < constN; i++ {
-		if pktest.t[i] != vec.pk.t[i] {
-			t.Error("failed to derive public key from signing key")
-		}
-	}
+// func _TestGlyph2(t *testing.T) {
+// 	vec := testvecs[0]
+// 	/*check that public key is derived from signing key*/
+// 	pktest := vec.sk.PK()
+// 	for i := 0; i < constN; i++ {
+// 		if pktest.t[i] != vec.pk.t[i] {
+// 			t.Error("failed to derive public key from signing key")
+// 		}
+// 	}
 
-	/*check that supplied signature verifies correctly*/
-	if err := vec.pk.Verify(&vec.sig, vec.message); err != nil {
-		t.Error(err)
-	}
+// 	/*check that supplied signature verifies correctly*/
+// 	if err := vec.pk.Verify(&vec.sig, vec.message); err != nil {
+// 		t.Error(err)
+// 	}
 
-	/*check that computed signature matches provided one*/
-	sigtest, err := vec.sk.deterministicSign(vec.y1, vec.y2, vec.message)
-	if err != nil {
-		t.Error(err)
-	}
-	for i := 0; i < constN; i++ {
-		if sigtest.z1[i] != vec.sig.z1[i] {
-			t.Error("failed to produce z1 signature from test vector", sigtest.z1[i], vec.sig.z1[i], i)
-		}
-		if sigtest.z2[i] != vec.sig.z2[i] {
-			t.Error("failed to produce z2 signature from test vector")
-		}
-	}
-	for i := 0; i < omega; i++ {
-		if sigtest.c[i].pos != vec.sig.c[i].pos {
-			t.Error("failed to produce pos signature from test vector")
-		}
-		if sigtest.c[i].sign != vec.sig.c[i].sign {
-			t.Error("failed to produce sign signature from test vector")
-		}
-	}
+// 	/*check that computed signature matches provided one*/
+// 	sigtest, err := vec.sk.deterministicSign(vec.y1, vec.y2, vec.message)
+// 	if err != nil {
+// 		t.Error(err)
+// 	}
+// 	for i := 0; i < constN; i++ {
+// 		if sigtest.z1[i] != vec.sig.z1[i] {
+// 			t.Error("failed to produce z1 signature from test vector", sigtest.z1[i], vec.sig.z1[i], i)
+// 		}
+// 		if sigtest.z2[i] != vec.sig.z2[i] {
+// 			t.Error("failed to produce z2 signature from test vector")
+// 		}
+// 	}
+// 	for i := 0; i < omega; i++ {
+// 		if sigtest.c[i].pos != vec.sig.c[i].pos {
+// 			t.Error("failed to produce pos signature from test vector")
+// 		}
+// 		if sigtest.c[i].sign != vec.sig.c[i].sign {
+// 			t.Error("failed to produce sign signature from test vector")
+// 		}
+// 	}
 
-}
+// }
 
 func TestGlyph1(t *testing.T) {
 	message := []byte("testtest")
@@ -237,6 +237,14 @@ func TestNTTSpace(t *testing.T) {
 	}
 }
 
+func pointwiseMul(b, e0 [constN]ringelt) [constN]ringelt {
+	var v [constN]ringelt
+	for i := 0; i < constN; i++ {
+		v[i] = mulMOD(e0[i], b[i])
+	}
+	return v
+}
+
 func BenchmarkVeri(b *testing.B) {
 	message := make([]byte, 32)
 
@@ -308,11 +316,20 @@ func TestGlyph4(t *testing.T) {
 		t.Error(err)
 	}
 
-	if sk2 != sk2 {
+	if sk2.s1 != sk.s1 {
+		t.Log(sk2)
+		t.Log(sk)
 		t.Error("invalid sk serialization")
 	}
-	if pk2 != pk2 {
+	if sk2.s2 != sk.s2 {
+		t.Log(sk2)
+		t.Log(sk)
 		t.Error("invalid sk serialization")
+	}
+	if pk2.t != pk.t {
+		t.Log(pk2)
+		t.Log(pk)
+		t.Error("invalid pk serialization")
 	}
 	if sig.z1 != sig2.z1 {
 		for i := range sig.z1 {
