@@ -22,22 +22,39 @@ package glyph
 
 import (
 	"context"
+	"crypto/rand"
 	"errors"
+	"io"
 	"time"
 
 	"github.com/AidosKuneen/numcpu"
 )
 
 /*NewSK generates signing key (s1,s2), stored in physical form */
-func NewSK() (*SigningKey, error) {
+func NewSK() *SigningKey {
+	key := make([]byte, 32)
+	if _, err := io.ReadFull(rand.Reader, key); err != nil {
+		panic(err)
+	}
+
+	return NewSKFromSeed(key)
+}
+
+/*
+NewSKFromSeed generates signing key (s1,s2) from the key, stored in physical form.
+The key must be 32 bytes.
+*/
+func NewSKFromSeed(key []byte) *SigningKey {
 	sk := &SigningKey{}
 	var err error
-	sk.s1, err = sampleGLPSecret()
+	sk.s1, sk.s2, err = sampleGLPSecrets(key)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
-	sk.s2, err = sampleGLPSecret()
-	return sk, err
+	if err := sk.check(); err != nil {
+		panic(err)
+	}
+	return sk
 }
 
 /*PK takes a signing key stored in physical space and computes the public key in physical space */
@@ -50,11 +67,17 @@ func (sk *SigningKey) PK() *Publickey {
 	ntt(&s2)
 	pk.t = pointwiseMulAdd(constA, s1, s2)
 	invNtt(&pk.t)
+	if err := pk.check(); err != nil {
+		panic(err)
+	}
 	return pk
 }
 
 /*Sign signs a message as (z,c) where z is a ring elt in physical form, and c is a hash output encoded as a sparse poly */
 func (sk *SigningKey) Sign(message []byte) (*Signature, error) {
+	if err := sk.check(); err != nil {
+		return nil, err
+	}
 	type result struct {
 		err error
 		sig *Signature
@@ -110,7 +133,10 @@ func (sk *SigningKey) Sign(message []byte) (*Signature, error) {
 	}
 	select {
 	case r := <-notify:
-		return r.sig, r.err
+		if r.err != nil {
+			return nil, r.err
+		}
+		return r.sig, r.sig.check()
 	case <-time.After(time.Minute):
 		return nil, errors.New("timeout while signing")
 	}
@@ -186,6 +212,12 @@ func (pk *Publickey) Verify(sig *Signature, message []byte) error {
 		if abs(sig.z2[i]) > (constB - omega) {
 			return errors.New("invalid coeeficient")
 		}
+	}
+	if err := pk.check(); err != nil {
+		return err
+	}
+	if err := sig.check(); err != nil {
+		return err
 	}
 	z1 := sig.z1
 	z2 := sig.z2

@@ -45,7 +45,7 @@ func newRandom(key, iv []byte) (*random, error) {
 }
 
 func newRandom2() (*random, error) {
-	key := make([]byte, 16)
+	key := make([]byte, 32)
 	if _, err := io.ReadFull(rand.Reader, key); err != nil {
 		return nil, err
 	}
@@ -61,16 +61,26 @@ func (r *random) please(in []byte) uint64 {
 func (r *random) please2() uint64 {
 	return r.please(zero8)
 }
-func sampleGLPSecret() ([constN]ringelt, error) {
-	var f [constN]ringelt
+func sampleGLPSecrets(seed []byte) ([constN]ringelt, [constN]ringelt, error) {
+	var s1, s2 [constN]ringelt
+	rnd, err := newRandom(seed, make([]byte, aes.BlockSize))
+	if err != nil {
+		return s1, s2, err
+	}
+	s1, err = sampleGLPSecret(rnd)
+	if err != nil {
+		return s1, s2, err
+	}
+	s2, err = sampleGLPSecret(rnd)
+	return s1, s2, err
+}
+
+func sampleGLPSecret(rnd *random) ([constN]ringelt, error) {
+	var s [constN]ringelt
 	randBitsUsed := 0
 
-	rnd, err := newRandom2()
-	if err != nil {
-		return f, err
-	}
 	rand64 := rnd.please2()
-	for i := range f {
+	for i := range s {
 		if randBitsUsed >= 63 {
 			rand64 = rnd.please2()
 			randBitsUsed = 0
@@ -86,14 +96,16 @@ func sampleGLPSecret() ([constN]ringelt, error) {
 		}
 		switch rand2 {
 		case 0:
-			f[i] = 0
+			s[i] = 0
 		case 1:
-			f[i] = 1
+			s[i] = 1
 		case 2:
-			f[i] = constQ - 1
+			s[i] = constQ - 1
+		case 3:
+			panic("invalid s")
 		}
 	}
-	return f, nil
+	return s, nil
 }
 
 type crand struct {

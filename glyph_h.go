@@ -20,13 +20,18 @@
 
 package glyph
 
+import (
+	"errors"
+	"fmt"
+)
+
 type ringelt uint16
 
 //Global Constants
 const (
-	PKSize  = qBits * constN / 8
-	SKSize  = 2 * 2 * constN / 8
-	SigSize = ((bBits+1+2)*constN + 11*omega) / 8
+	PKSize  = qBits * constN / 8                  //512 bytes
+	SKSize  = 2 * 2 * constN / 8                  //1792 bytes
+	SigSize = ((bBits+1+2)*constN + 11*omega) / 8 //1942 bytes
 )
 
 const (
@@ -51,7 +56,23 @@ const (
 	qBits  = 14
 )
 
-var constA [constN]ringelt
+var (
+	zero   [constN]ringelt
+	one    [constN]ringelt
+	mone   [constN]ringelt
+	allK   [constN]ringelt
+	allMK  [constN]ringelt
+	constA [constN]ringelt
+)
+
+func init() {
+	for i := range one {
+		one[i] = 1
+		mone[i] = constQ - 1
+		allK[i] = constB - omega
+		allMK[i] = constQ - (constB - omega)
+	}
+}
 
 //Publickey of glyph signature.
 type Publickey struct {
@@ -76,6 +97,68 @@ type Signature struct {
 	z1 [constN]ringelt
 	z2 [constN]ringelt
 	c  *sparsePolyST
+}
+
+func (p *Publickey) check() error {
+	if p.t == zero || p.t == one {
+		return errors.New("invalid t")
+	}
+	for _, t := range p.t {
+		if t >= constQ {
+			return errors.New("invalid t")
+		}
+	}
+	return nil
+}
+func (s *SigningKey) check() error {
+	if s.s1 == zero || s.s1 == one {
+		return errors.New("invalid s1, all zero or one")
+	}
+	if s.s2 == zero || s.s2 == one {
+		return errors.New("invalid s2,all zero or one")
+	}
+	for i := range s.s1 {
+		if s.s1[i] != 0 && s.s1[i] != 1 && s.s1[i] != constQ-1 {
+			return fmt.Errorf("invalid s1,%v is not 0,1,-1", s.s1[i])
+		}
+		if s.s2[i] != 0 && s.s2[i] != 1 && s.s2[i] != constQ-1 {
+			return fmt.Errorf("invalid s2,%v is not 0,1,-1", s.s2[i])
+		}
+	}
+	return nil
+}
+
+func (sig *Signature) check() error {
+	if sig.z1 == zero || sig.z1 == mone {
+		return errors.New("invalid z1")
+	}
+	if sig.z2 == zero || sig.z2 == allK || sig.z2 == allMK {
+		return errors.New("invalid z2")
+	}
+	for _, z2 := range sig.z2 {
+		if z2 != 0 && z2 != constB-omega && z2 != constQ-(constB-omega) {
+			return errors.New("invalid z2")
+		}
+	}
+	pos := make(map[uint16]struct{})
+	for _, s := range sig.c {
+		if _, exist := pos[s.pos]; exist {
+			return errors.New("invalid pos")
+		}
+		pos[s.pos] = struct{}{}
+	}
+	ok := false
+	sign := sig.c[0].sign
+	for _, s := range sig.c {
+		if sign != s.sign {
+			ok = true
+			break
+		}
+	}
+	if !ok {
+		return errors.New("invalid pos")
+	}
+	return nil
 }
 
 func sign(x ringelt) int {

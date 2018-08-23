@@ -21,8 +21,11 @@
 package glyph
 
 import (
+	"encoding/json"
 	"errors"
 	"math/big"
+
+	"github.com/vmihailenco/msgpack"
 )
 
 //Bytes serialize Publickey.
@@ -53,7 +56,7 @@ func NewPublickey(b []byte) (*Publickey, error) {
 		p.t[i] = ringelt(v.Uint64())
 		r.Rsh(&r, qBits)
 	}
-	return p, nil
+	return p, p.check()
 }
 
 //Bytes serialize SigningKey.
@@ -107,7 +110,7 @@ func NewSigningKey(b []byte) (*SigningKey, error) {
 		}
 		r.Rsh(&r, 2)
 	}
-	return s, nil
+	return s, s.check()
 }
 
 //Bytes serialize sparsePolyST.
@@ -210,5 +213,90 @@ func NewSignature(b []byte) (*Signature, error) {
 	}
 	var err error
 	s.c, err = newSparsePoly(&r)
-	return &s, err
+	if err != nil {
+		return nil, err
+	}
+	return &s, s.check()
+}
+
+type publickey struct {
+	T [constN]ringelt `json:"t"`
+}
+
+//MarshalJSON  marshals Publickey into valid JSON.
+func (p *Publickey) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&publickey{
+		T: p.t,
+	})
+}
+
+//UnmarshalJSON  unmarshals JSON to Publickey.
+func (p *Publickey) UnmarshalJSON(b []byte) error {
+	var s publickey
+	err := json.Unmarshal(b, &s)
+	if err == nil {
+		p.t = s.T
+	}
+	return err
+}
+
+//EncodeMsgpack  marshals Publickey into valid JSON.
+func (p *Publickey) EncodeMsgpack(enc *msgpack.Encoder) error {
+	return enc.Encode(&publickey{
+		T: p.t,
+	})
+}
+
+//DecodeMsgpack  unmarshals JSON to Publickey.
+func (p *Publickey) DecodeMsgpack(dec *msgpack.Decoder) error {
+	var s publickey
+	err := dec.Decode(&s)
+	if err == nil {
+		p.t = s.T
+	}
+	return err
+}
+
+//SigningKey of glyph signature.
+type signingKey struct {
+	S1 [constN]ringelt `json:"s1"`
+	S2 [constN]ringelt `json:"s2"`
+}
+
+//MarshalJSON  marshals SiningKey into valid JSON.
+func (s *SigningKey) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&signingKey{
+		S1: s.s1,
+		S2: s.s2,
+	})
+}
+
+//UnmarshalJSON  unmarshals JSON to SiningKey.
+func (s *SigningKey) UnmarshalJSON(b []byte) error {
+	var ss signingKey
+	err := json.Unmarshal(b, &ss)
+	if err == nil {
+		s.s1 = ss.S1
+		s.s2 = ss.S2
+	}
+	return err
+}
+
+//EncodeMsgpack  marshals SigningKey into valid JSON.
+func (s *SigningKey) EncodeMsgpack(enc *msgpack.Encoder) error {
+	return enc.Encode(&signingKey{
+		S1: s.s1,
+		S2: s.s2,
+	})
+}
+
+//DecodeMsgpack  unmarshals JSON to SigningKey.
+func (s *SigningKey) DecodeMsgpack(dec *msgpack.Decoder) error {
+	var ss signingKey
+	err := dec.Decode(&ss)
+	if err == nil {
+		s.s1 = ss.S1
+		s.s2 = ss.S2
+	}
+	return err
 }

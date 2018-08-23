@@ -24,56 +24,7 @@ import (
 	"testing"
 )
 
-// type testvec struct {
-// 	pk      Publickey
-// 	sk      SigningKey
-// 	y1      [constN]ringelt
-// 	y2      [constN]ringelt
-// 	sig     Signature
-// 	message []byte
-// }
-
 const signTrials = 100
-
-//only for q=59393, b=16383
-// func _TestGlyph2(t *testing.T) {
-// 	vec := testvecs[0]
-// 	/*check that public key is derived from signing key*/
-// 	pktest := vec.sk.PK()
-// 	for i := 0; i < constN; i++ {
-// 		if pktest.t[i] != vec.pk.t[i] {
-// 			t.Error("failed to derive public key from signing key")
-// 		}
-// 	}
-
-// 	/*check that supplied signature verifies correctly*/
-// 	if err := vec.pk.Verify(&vec.sig, vec.message); err != nil {
-// 		t.Error(err)
-// 	}
-
-// 	/*check that computed signature matches provided one*/
-// 	sigtest, err := vec.sk.deterministicSign(vec.y1, vec.y2, vec.message)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
-// 	for i := 0; i < constN; i++ {
-// 		if sigtest.z1[i] != vec.sig.z1[i] {
-// 			t.Error("failed to produce z1 signature from test vector", sigtest.z1[i], vec.sig.z1[i], i)
-// 		}
-// 		if sigtest.z2[i] != vec.sig.z2[i] {
-// 			t.Error("failed to produce z2 signature from test vector")
-// 		}
-// 	}
-// 	for i := 0; i < omega; i++ {
-// 		if sigtest.c[i].pos != vec.sig.c[i].pos {
-// 			t.Error("failed to produce pos signature from test vector")
-// 		}
-// 		if sigtest.c[i].sign != vec.sig.c[i].sign {
-// 			t.Error("failed to produce sign signature from test vector")
-// 		}
-// 	}
-
-// }
 
 func TestGlyph1(t *testing.T) {
 	message := []byte("testtest")
@@ -82,10 +33,7 @@ func TestGlyph1(t *testing.T) {
 	t.Log("example signature")
 	t.Log("message:")
 	t.Log(message)
-	sk, err := NewSK()
-	if err != nil {
-		t.Error(err)
-	}
+	sk := NewSK()
 	pk := sk.PK()
 	pkt1 := pk.t
 	var zero [1024]ringelt
@@ -94,9 +42,6 @@ func TestGlyph1(t *testing.T) {
 		t.Fatal("pk is all zero")
 	}
 	invNtt(&pk.t)
-	if pk.t == zero {
-		t.Fatal("pk is all zero")
-	}
 	if pk.t != pkt1 {
 		t.Log(pk.t)
 		t.Log(pkt1)
@@ -121,37 +66,18 @@ func TestGlyph1(t *testing.T) {
 }
 
 func BenchmarkNtt(b *testing.B) {
-	sk, err := NewSK()
-	if err != nil {
-		b.Error(err)
-	}
+	sk := NewSK()
 	pk := sk.PK()
-
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		ntt(&pk.t)
 	}
 }
 
-// func BenchmarkFft(b *testing.B) {
-// 	sk, err := NewSK()
-// 	if err != nil {
-// 		b.Error(err)
-// 	}
-// 	pk := sk.PK()
-
-// 	b.ResetTimer()
-// 	for i := 0; i < b.N; i++ {
-// 		fftForward(&pk.t)
-// 	}
-// }
 func BenchmarkSign(b *testing.B) {
 	message := make([]byte, 32)
 
-	sk, err := NewSK()
-	if err != nil {
-		b.Error(err)
-	}
+	sk := NewSK()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		sk.Sign(message)
@@ -161,10 +87,7 @@ func BenchmarkSign(b *testing.B) {
 func BenchmarkSparse(b *testing.B) {
 	message := make([]byte, 32)
 
-	sk, err := NewSK()
-	if err != nil {
-		b.Error(err)
-	}
+	sk := NewSK()
 	sig, err := sk.Sign(message)
 	if err != nil {
 		b.Error(err)
@@ -178,10 +101,7 @@ func BenchmarkSparse(b *testing.B) {
 func BenchmarkNTTSparse(b *testing.B) {
 	message := make([]byte, 32)
 
-	sk, err := NewSK()
-	if err != nil {
-		b.Error(err)
-	}
+	sk := NewSK()
 	sig, err := sk.Sign(message)
 	if err != nil {
 		b.Error(err)
@@ -207,10 +127,7 @@ func BenchmarkNTTSparse(b *testing.B) {
 func TestNTTSpace(t *testing.T) {
 	message := make([]byte, 32)
 
-	sk, err := NewSK()
-	if err != nil {
-		t.Error(err)
-	}
+	sk := NewSK()
 	sig, err := sk.Sign(message)
 	if err != nil {
 		t.Error(err)
@@ -248,10 +165,7 @@ func pointwiseMul(b, e0 [constN]ringelt) [constN]ringelt {
 func BenchmarkVeri(b *testing.B) {
 	message := make([]byte, 32)
 
-	sk, err := NewSK()
-	if err != nil {
-		b.Error(err)
-	}
+	sk := NewSK()
 	sig, err := sk.Sign(message)
 	if err != nil {
 		b.Error(err)
@@ -268,10 +182,7 @@ func TestGlyph3(t *testing.T) {
 	/*test a lot of verifications*/
 	t.Log("trying ", signTrials, "independent keygen/sign/verifies")
 	for i := 0; i < signTrials; i++ {
-		sk, err := NewSK()
-		if err != nil {
-			t.Error(err)
-		}
+		sk := NewSK()
 		pk := sk.PK()
 		sig, err := sk.Sign(message)
 		if err != nil {
@@ -289,10 +200,7 @@ func TestGlyph4(t *testing.T) {
 	message := []byte("testtest")
 
 	/*print a single example*/
-	sk, err := NewSK()
-	if err != nil {
-		t.Error(err)
-	}
+	sk := NewSK()
 	pk := sk.PK()
 	sig, err := sk.Sign(message)
 	if err != nil {
