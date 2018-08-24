@@ -37,13 +37,16 @@ func (p *Publickey) Bytes() []byte {
 		tt := big.NewInt(int64(t))
 		r.Or(&r, tt)
 	}
-	return r.Bytes()
+	b := r.Bytes()
+	bb := make([]byte, PKSize)
+	copy(bb[PKSize-len(b):], b)
+	return bb
 }
 
 //NewPublickey creates an Publickey from serialized bytes.
 func NewPublickey(b []byte) (*Publickey, error) {
 	if len(b) != PKSize {
-		return nil, errors.New("invalid length of bytes")
+		return nil, errors.New("invalid length of bytes for PK")
 	}
 	var r big.Int
 	r.SetBytes(b)
@@ -80,13 +83,16 @@ func (s *SigningKey) Bytes() []byte {
 		tt := big.NewInt(int64(t))
 		r.Or(&r, tt)
 	}
-	return r.Bytes()
+	b := r.Bytes()
+	bb := make([]byte, SKSize)
+	copy(bb[SKSize-len(b):], b)
+	return bb
 }
 
 //NewSigningKey creates an SiningKey from serialized bytes.
 func NewSigningKey(b []byte) (*SigningKey, error) {
 	if len(b) != SKSize {
-		return nil, errors.New("invalid length of bytes")
+		return nil, errors.New("invalid length of bytes for SK")
 	}
 	var r big.Int
 	r.SetBytes(b)
@@ -175,13 +181,16 @@ func (s *Signature) Bytes() []byte {
 		tt := big.NewInt(int64(d))
 		r.Or(r, tt)
 	}
-	return r.Bytes()
+	b := r.Bytes()
+	bb := make([]byte, SigSize)
+	copy(bb[SigSize-len(b):], b)
+	return bb
 }
 
 //NewSignature creates an sparsePolyST from serialized bytes.
 func NewSignature(b []byte) (*Signature, error) {
 	if len(b) != SigSize {
-		return nil, errors.New("invalid length of bytes")
+		return nil, errors.New("invalid length of bytes for Sig")
 	}
 	var s Signature
 	var r big.Int
