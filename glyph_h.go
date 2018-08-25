@@ -147,17 +147,17 @@ func (sig *Signature) check() error {
 		}
 		pos[s.pos] = struct{}{}
 	}
-	ok := false
-	sign := sig.c[0].sign
-	for _, s := range sig.c {
-		if sign != s.sign {
-			ok = true
-			break
-		}
-	}
-	if !ok {
-		return errors.New("invalid pos")
-	}
+	// ok := false
+	// sign := sig.c[0].sign
+	// for _, s := range sig.c {
+	// 	if sign != s.sign {
+	// 		ok = true
+	// 		break
+	// 	}
+	// }
+	// if !ok {
+	// 	return errors.New("invalid pos")
+	// }
 	return nil
 }
 
