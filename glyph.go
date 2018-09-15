@@ -22,29 +22,17 @@ package glyph
 
 import (
 	"context"
-	"crypto/rand"
 	"errors"
-	"io"
 	"time"
 
 	"github.com/AidosKuneen/numcpu"
 )
 
-/*NewSK generates signing key (s1,s2), stored in physical form */
-func NewSK() *SigningKey {
-	key := make([]byte, 32)
-	if _, err := io.ReadFull(rand.Reader, key); err != nil {
-		panic(err)
-	}
-
-	return NewSKFromSeed(key)
-}
-
 /*
-NewSKFromSeed generates signing key (s1,s2) from the key, stored in physical form.
+NewSK generates signing key (s1,s2) from the key, stored in physical form.
 The key must be 32 bytes.
 */
-func NewSKFromSeed(key []byte) *SigningKey {
+func NewSK(key []byte) *SigningKey {
 	sk := &SigningKey{}
 	var err error
 	sk.s1, sk.s2, err = sampleGLPSecrets(key)

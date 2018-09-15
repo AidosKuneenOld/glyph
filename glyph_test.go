@@ -21,11 +21,20 @@
 package glyph
 
 import (
+	"crypto/rand"
+	"io"
 	"testing"
 )
 
 const signTrials = 100
 
+func key() []byte {
+	k := make([]byte, 32)
+	if _, err := io.ReadFull(rand.Reader, k); err != nil {
+		panic(err)
+	}
+	return k
+}
 func TestGlyph1(t *testing.T) {
 	message := []byte("testtest")
 
@@ -33,7 +42,7 @@ func TestGlyph1(t *testing.T) {
 	t.Log("example signature")
 	t.Log("message:")
 	t.Log(message)
-	sk := NewSK()
+	sk := NewSK(key())
 	pk := sk.PK()
 	pkt1 := pk.t
 	var zero [1024]ringelt
@@ -66,7 +75,7 @@ func TestGlyph1(t *testing.T) {
 }
 
 func BenchmarkNtt(b *testing.B) {
-	sk := NewSK()
+	sk := NewSK(key())
 	pk := sk.PK()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -77,7 +86,7 @@ func BenchmarkNtt(b *testing.B) {
 func BenchmarkSign(b *testing.B) {
 	message := make([]byte, 32)
 
-	sk := NewSK()
+	sk := NewSK(key())
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		sk.Sign(message)
@@ -87,7 +96,7 @@ func BenchmarkSign(b *testing.B) {
 func BenchmarkSparse(b *testing.B) {
 	message := make([]byte, 32)
 
-	sk := NewSK()
+	sk := NewSK(key())
 	sig, err := sk.Sign(message)
 	if err != nil {
 		b.Error(err)
@@ -101,7 +110,7 @@ func BenchmarkSparse(b *testing.B) {
 func BenchmarkNTTSparse(b *testing.B) {
 	message := make([]byte, 32)
 
-	sk := NewSK()
+	sk := NewSK(key())
 	sig, err := sk.Sign(message)
 	if err != nil {
 		b.Error(err)
@@ -127,7 +136,7 @@ func BenchmarkNTTSparse(b *testing.B) {
 func TestNTTSpace(t *testing.T) {
 	message := make([]byte, 32)
 
-	sk := NewSK()
+	sk := NewSK(key())
 	sig, err := sk.Sign(message)
 	if err != nil {
 		t.Error(err)
@@ -165,7 +174,7 @@ func pointwiseMul(b, e0 [constN]ringelt) [constN]ringelt {
 func BenchmarkVeri(b *testing.B) {
 	message := make([]byte, 32)
 
-	sk := NewSK()
+	sk := NewSK(key())
 	sig, err := sk.Sign(message)
 	if err != nil {
 		b.Error(err)
@@ -182,7 +191,7 @@ func TestGlyph3(t *testing.T) {
 	/*test a lot of verifications*/
 	t.Log("trying ", signTrials, "independent keygen/sign/verifies")
 	for i := 0; i < signTrials; i++ {
-		sk := NewSK()
+		sk := NewSK(key())
 		pk := sk.PK()
 		sig, err := sk.Sign(message)
 		if err != nil {
@@ -200,7 +209,7 @@ func TestGlyph4(t *testing.T) {
 	message := []byte("testtest")
 
 	/*print a single example*/
-	sk := NewSK()
+	sk := NewSK(key())
 	pk := sk.PK()
 	sig, err := sk.Sign(message)
 	if err != nil {
